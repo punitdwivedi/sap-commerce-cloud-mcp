@@ -359,7 +359,7 @@ async function main() {
 
   const server = new Server(
     {
-      name: 'sap-commerce-mcp',
+      name: 'sap-commerce-cloud-mcp',
       version: pkg.version,
     },
     {

@@ -25,8 +25,8 @@ MCP (Model Context Protocol) server for SAP Commerce Cloud (Hybris) integration.
 ## Installation
 
 ```bash
-git clone https://github.com/punitdwivedi/sap-commerce-mcp.git
-cd sap-commerce-mcp
+git clone https://github.com/punitdwivedi/sap-commerce-cloud-mcp.git
+cd sap-commerce-cloud-mcp
 npm install
 npm run build
 ```
@@ -81,7 +81,7 @@ claude mcp add hybris \
   -e HYBRIS_BASE_URL=https://localhost:9002 \
   -e HYBRIS_USERNAME=admin \
   -e HYBRIS_PASSWORD=nimda \
-  -- node /path/to/sap-commerce-mcp/dist/index.js
+  -- node /path/to/sap-commerce-cloud-mcp/dist/index.js
 ```
 
 Or manually add to your Claude Code MCP settings (`~/.claude.json` or project config):
@@ -92,7 +92,7 @@ Or manually add to your Claude Code MCP settings (`~/.claude.json` or project co
     "hybris": {
       "type": "stdio",
       "command": "node",
-      "args": ["/path/to/sap-commerce-mcp/dist/index.js"],
+      "args": ["/path/to/sap-commerce-cloud-mcp/dist/index.js"],
       "env": {
         "HYBRIS_BASE_URL": "https://localhost:9002",
         "HYBRIS_USERNAME": "admin",
@@ -112,7 +112,7 @@ Add to your Claude Desktop configuration (`~/Library/Application Support/Claude/
   "mcpServers": {
     "hybris": {
       "command": "node",
-      "args": ["/path/to/sap-commerce-mcp/dist/index.js"],
+      "args": ["/path/to/sap-commerce-cloud-mcp/dist/index.js"],
       "env": {
         "HYBRIS_BASE_URL": "https://localhost:9002",
         "HYBRIS_USERNAME": "admin",
@@ -132,7 +132,7 @@ Add to your Cursor MCP configuration (`~/.cursor/mcp.json`):
   "mcpServers": {
     "hybris": {
       "command": "node",
-      "args": ["/path/to/sap-commerce-mcp/dist/index.js"],
+      "args": ["/path/to/sap-commerce-cloud-mcp/dist/index.js"],
       "env": {
         "HYBRIS_BASE_URL": "https://localhost:9002",
         "HYBRIS_USERNAME": "admin",
@@ -152,7 +152,7 @@ Add to your Windsurf MCP configuration (`~/.codeium/windsurf/mcp_config.json`):
   "mcpServers": {
     "hybris": {
       "command": "node",
-      "args": ["/path/to/sap-commerce-mcp/dist/index.js"],
+      "args": ["/path/to/sap-commerce-cloud-mcp/dist/index.js"],
       "env": {
         "HYBRIS_BASE_URL": "https://localhost:9002",
         "HYBRIS_USERNAME": "admin",
@@ -172,7 +172,7 @@ For VS Code extensions that support MCP, add to your workspace `.vscode/mcp.json
   "servers": {
     "hybris": {
       "command": "node",
-      "args": ["/path/to/sap-commerce-mcp/dist/index.js"],
+      "args": ["/path/to/sap-commerce-cloud-mcp/dist/index.js"],
       "env": {
         "HYBRIS_BASE_URL": "https://localhost:9002",
         "HYBRIS_USERNAME": "admin",
@@ -193,7 +193,7 @@ Add to your Zed settings (`~/.config/zed/settings.json`):
     "hybris": {
       "command": {
         "path": "node",
-        "args": ["/path/to/sap-commerce-mcp/dist/index.js"],
+        "args": ["/path/to/sap-commerce-cloud-mcp/dist/index.js"],
         "env": {
           "HYBRIS_BASE_URL": "https://localhost:9002",
           "HYBRIS_USERNAME": "admin",
@@ -217,7 +217,7 @@ For IntelliJ IDEA, WebStorm, PyCharm, and other JetBrains IDEs with AI Assistant
   "mcpServers": {
     "hybris": {
       "command": "node",
-      "args": ["/path/to/sap-commerce-mcp/dist/index.js"],
+      "args": ["/path/to/sap-commerce-cloud-mcp/dist/index.js"],
       "env": {
         "HYBRIS_BASE_URL": "https://localhost:9002",
         "HYBRIS_USERNAME": "admin",
@@ -237,7 +237,7 @@ Add to your Cody MCP configuration (`~/.config/cody/mcp.json`):
   "mcpServers": {
     "hybris": {
       "command": "node",
-      "args": ["/path/to/sap-commerce-mcp/dist/index.js"],
+      "args": ["/path/to/sap-commerce-cloud-mcp/dist/index.js"],
       "env": {
         "HYBRIS_BASE_URL": "https://localhost:9002",
         "HYBRIS_USERNAME": "admin",
@@ -257,7 +257,7 @@ Add to your Raycast AI extension MCP settings (`~/.config/raycast/mcp.json`):
   "mcpServers": {
     "hybris": {
       "command": "node",
-      "args": ["/path/to/sap-commerce-mcp/dist/index.js"],
+      "args": ["/path/to/sap-commerce-cloud-mcp/dist/index.js"],
       "env": {
         "HYBRIS_BASE_URL": "https://localhost:9002",
         "HYBRIS_USERNAME": "admin",
@@ -273,7 +273,7 @@ Add to your Raycast AI extension MCP settings (`~/.config/raycast/mcp.json`):
 For any other MCP-compatible client, the server uses **stdio transport**. Run with:
 
 ```bash
-node /path/to/sap-commerce-mcp/dist/index.js
+node /path/to/sap-commerce-cloud-mcp/dist/index.js
 ```
 
 Required environment variables:
