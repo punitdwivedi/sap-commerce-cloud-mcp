@@ -1,4 +1,4 @@
-# Hybris MCP Server
+# SAP Commerce Cloud MCP Server
 
 MCP (Model Context Protocol) server for SAP Commerce Cloud (Hybris) integration. Lets AI assistants (Cursor, Claude, and others) talk to your Commerce instance via HAC and OCC.
 
