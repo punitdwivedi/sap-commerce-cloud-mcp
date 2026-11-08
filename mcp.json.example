@@ -2,7 +2,7 @@
   "mcpServers": {
     "hybris": {
       "command": "node",
-      "args": ["/absolute/path/to/hybris-mcp/dist/index.js"],
+      "args": ["/absolute/path/to/sap-commerce-mcp/dist/index.js"],
       "env": {
         "HYBRIS_BASE_URL": "https://localhost:9002",
         "HYBRIS_USERNAME": "admin",

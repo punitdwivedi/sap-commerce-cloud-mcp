@@ -359,7 +359,7 @@ async function main() {
 
   const server = new Server(
     {
-      name: 'hybris-mcp',
+      name: 'sap-commerce-mcp',
       version: pkg.version,
     },
     {
