@@ -25,8 +25,8 @@ MCP (Model Context Protocol) server for SAP Commerce Cloud (Hybris) integration.
 ## Installation
 
 ```bash
-git clone https://github.com/punitdwivedi/hybris-mcp.git
-cd hybris-mcp
+git clone https://github.com/punitdwivedi/sap-commerce-mcp.git
+cd sap-commerce-mcp
 npm install
 npm run build
 ```
