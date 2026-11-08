@@ -453,10 +453,6 @@ The server handles CSRF tokens automatically. If you see CSRF errors:
 2. Verify the HAC path is correct
 3. Try restarting the MCP server to get a fresh session
 
-## Credits
-
-Original MCP server by [Dawid Michałowicz / Emenowicz](https://github.com/Emenowicz/hybris-mcp). This repository builds on that project with additional operational tooling and documentation.
-
 ## License
 
 MIT — see [LICENSE](LICENSE). Copyright © 2025 Dawid Michałowicz; additional contributions © 2026 Punit Kumar.
