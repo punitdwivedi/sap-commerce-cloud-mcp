@@ -56,10 +56,125 @@ flowchart LR
 
 | File | Purpose |
 |------|---------|
-| `scripts/hybris/core-cbus-order-step-timings-hourly.groovy` | Full report logic (authoritative source for Script content) |
-| `scripts/hybris/core-cbus-order-step-timings-hourly.impex` | Registers Script / Job / CronJob / Trigger (no Script content) |
-| `scripts/hybris/core-cbus-order-step-timings-hourly.properties` | Commented property overrides for CCV2 / local |
-| `scripts/export-core-cbus-order-step-timings.mjs` | Ad-hoc Node export (same CSV shape; used for 7-day one-offs) |
+| [`scripts/hybris/core-cbus-order-step-timings-hourly.groovy`](../scripts/hybris/core-cbus-order-step-timings-hourly.groovy) | Full report logic (authoritative source for Script content) |
+| [`scripts/hybris/core-cbus-order-step-timings-hourly.impex`](../scripts/hybris/core-cbus-order-step-timings-hourly.impex) | Registers Script / Job / CronJob / Trigger (no Script content) |
+| [`scripts/hybris/core-cbus-order-step-timings-hourly.properties`](../scripts/hybris/core-cbus-order-step-timings-hourly.properties) | Commented property overrides for CCV2 / local |
+| [`scripts/export-core-cbus-order-step-timings.mjs`](../scripts/export-core-cbus-order-step-timings.mjs) | Ad-hoc Node export (same CSV shape; used for 7-day one-offs) |
+
+---
+
+## Artifact details
+
+### Groovy — `core-cbus-order-step-timings-hourly.groovy`
+
+Paste this file’s body into Hybris `Script` **`coreCbusOrderStepTimingsHourlyScript`** (`GROOVY`). This is the only place the report logic should live; keep git and the env Script content in sync.
+
+**Responsibilities**
+
+| Block | What it does |
+|-------|----------------|
+| Config helpers | `cfg` / `cfgBool` / `parseEmailList` read `Config.getParameter`; empty → hardcoded default |
+| Window | `HOURS_BACK` hours ending at job start; UTC file stamp `core_cbus-order-step-timings-yyyyMMdd-HHmm.csv` |
+| CSV build | FlexibleSearch SUCCEEDED `OrderProcess` for `STORE`; load `ProcessTaskLog`; `buildRow` → CREATE/MODIFY timing columns (ms) |
+| Email | `bayerEmailService` + `Email` / `EmailAttachment` (base64); From = `onedce.general.mailbox` else `email.from` |
+| S3 | `bayerAmazonS3IntService.getOneDCEs3Client(region)` + `putObject` to `channel-us-order-step-timings` (Vault via `onedce.aws.path`) |
+| Return | `OK rows=N file=… email=… s3=… window=…` (also logged under `coreCbusOrderStepTimingsHourly`) |
+
+**Hardcoded defaults (when property unset)**
+
+```text
+store          = core_cbus
+hoursBack      = 1
+email.to       = punit.dwivedi.ext@bayer.com
+email.from     = donot-reply@channelarrow.com
+s3.bucket      = channel-us-order-step-timings
+s3.region      = us-east-1
+s3.prefix      = (empty → object key = file name at bucket root)
+skipEmail/S3   = false
+```
+
+**Beans / deps used in script**
+
+- `flexibleSearchService`, `configurationService`, `bayerEmailService`, `bayerAmazonS3IntService`
+- Types: `Email`, `EmailAttachment`, AWS `ObjectMetadata` / `Regions`
+- Config keys beyond report props: `onedce.aws.path`, `onedce.general.mailbox`, `env` (for `[NON-PROD]` subject prefix)
+
+**Do not** store AWS access keys in the Groovy or properties — Vault only.
+
+---
+
+### Properties — `core-cbus-order-step-timings-hourly.properties`
+
+Reference / copy-paste for CCV2 aspect or `local.properties`. **All lines are commented**; the Groovy already applies the same defaults if keys are absent. Uncomment only what you need to override.
+
+```properties
+# Optional CCV2 / local.properties overrides for hourly order step-timings report.
+# Values below are hardcoded as Groovy fallbacks if unset.
+#
+# Already on env (do not redeclare unless overriding):
+#   onedce.aws.path   (d1: secret/explorers_onedce/aws-np, p1: .../aws-prod)
+#   vault.url
+
+# order.timings.report.store=core_cbus
+# order.timings.report.hoursBack=1
+# order.timings.report.email.to=punit.dwivedi.ext@bayer.com,other@bayer.com
+# order.timings.report.email.from=donot-reply@channelarrow.com
+# order.timings.report.email.cc=cc1@bayer.com;cc2@bayer.com
+
+# Dedicated S3 bucket — CSV uploaded at bucket root by default
+# order.timings.report.s3.bucket=channel-us-order-step-timings
+# order.timings.report.s3.region=us-east-1
+# order.timings.report.s3.prefix=
+
+# order.timings.report.skipEmail=false
+# order.timings.report.skipS3=false
+```
+
+| Key | Purpose |
+|-----|---------|
+| `order.timings.report.store` | BaseStore UID |
+| `order.timings.report.hoursBack` | Lookback hours (`1` hourly; `168` for 7-day ad-hoc) |
+| `order.timings.report.email.to` / `.cc` | Recipients (`,` or `;`) |
+| `order.timings.report.email.from` | Fallback From if mailbox unset |
+| `order.timings.report.s3.bucket` / `.region` / `.prefix` | S3 target (`prefix` empty = bucket root) |
+| `order.timings.report.skipEmail` / `.skipS3` | Disable a delivery channel |
+
+---
+
+### ImpEx — `core-cbus-order-step-timings-hourly.impex`
+
+Registers scheduling only. **Does not set `Script.content`** so re-import never wipes the Groovy body.
+
+**Prerequisites (from ImpEx header)**
+
+1. Groovy already pasted into Script `coreCbusOrderStepTimingsHourlyScript` (or update via Backoffice/HAC).
+2. Report properties optional (Groovy fallbacks).
+3. Mail path available on the node that runs the CronJob (`bayerEmailService` / mail sender).
+
+```impex
+# Do NOT set Script.content here — Groovy body is maintained separately (avoids wiping it).
+INSERT_UPDATE Script; code[unique=true]; scriptType(code)
+; coreCbusOrderStepTimingsHourlyScript; GROOVY
+
+INSERT_UPDATE ScriptingJob; code[unique=true]; scriptURI; active
+; coreCbusOrderStepTimingsHourlyJob; model://coreCbusOrderStepTimingsHourlyScript; true
+
+INSERT_UPDATE CronJob; code[unique=true]; job(code); sessionUser(uid); sessionLanguage(isocode); sessionCurrency(isocode); singleExecutable; active; logToDatabase; logToFile; logLevelDatabase(code); logLevelFile(code)
+; coreCbusOrderStepTimingsHourlyCronJob; coreCbusOrderStepTimingsHourlyJob; admin; en; USD; false; true; true; false; INFO; INFO
+
+# Fire at :05 every hour
+INSERT_UPDATE Trigger; cronJob(code)[unique=true]; cronExpression; active
+; coreCbusOrderStepTimingsHourlyCronJob; 0 5 * * * ?; true
+```
+
+| Item created | Code / value |
+|--------------|--------------|
+| `Script` | `coreCbusOrderStepTimingsHourlyScript` · type `GROOVY` · content managed outside ImpEx |
+| `ScriptingJob` | `coreCbusOrderStepTimingsHourlyJob` · `scriptURI=model://coreCbusOrderStepTimingsHourlyScript` · active |
+| `CronJob` | `coreCbusOrderStepTimingsHourlyCronJob` · user `admin` · `en`/`USD` · log to DB INFO · active |
+| `Trigger` | cron `0 5 * * * ?` · active (minute **:05** every hour; TZ = server/node) |
+
+**Import order tip:** create/update Script **content** first, then import ImpEx. Re-importing ImpEx alone is safe for Job/Cron/Trigger refreshes.
 
 ---
 
@@ -80,7 +195,7 @@ For a 7-day backfill, set `order.timings.report.hoursBack=168` (or run Groovy in
 
 Joins `OrderProcess` → `Order` → `BaseStore`, selects:
 
-- Process PK, code, definition name, creation/modified times  
+- Process PK, code, definition name, creation/modified times, **`spanId`**, **`traceId`**  
 - Order code, order creationtime, `modificationSubmitionTime`  
 - Kind: `CREATE` if definition contains `sap-order-process`, else `MODIFY`  
 - `sapOrderNumber`: strip `S2-` prefix from order code when present  
@@ -116,7 +231,7 @@ Durations over 1 hour or negative are blanked for `msBetween` (sanity clamp).
 
 Aligned with the Node exporter. Key fields:
 
-- Identity: `orderCode`, `sapOrderNumber`, `kind`, `processCode`, `processDefinition`, `processState`
+- Identity: `orderCode`, `sapOrderNumber`, `kind`, `processCode`, `processDefinition`, `processState`, `spanId`, `traceId` (from `OrderProcess`)
 - Lead-in: `cartSubmitAt`, `orderConvertedAt`, `cartToOrderMs`
 - Anchors: `orderCreated`, `modSubmitted`, `processCreated`, `processModified`
 - Spans: `commercePersistToBpMs`, `bpTriggerToFirstTaskMs`, `processCreatedToFirstErpMs`, `processWallMs`

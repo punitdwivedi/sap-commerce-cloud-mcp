@@ -106,7 +106,7 @@ log.info("Order timings report starting store={} window={}", STORE, windowLabel)
 // CSV helpers (aligned with Node export)
 // ---------------------------------------------------------------------------
 final List HEADER = [
-    'orderCode', 'sapOrderNumber', 'kind', 'processCode', 'processDefinition', 'processState',
+    'orderCode', 'sapOrderNumber', 'kind', 'processCode', 'processDefinition', 'processState', 'spanId', 'traceId',
     'cartSubmitAt', 'orderConvertedAt', 'cartToOrderMs',
     'orderCreated', 'modSubmitted', 'processCreated', 'processModified',
     'commercePersistToBpMs', 'bpTriggerToFirstTaskMs', 'processCreatedToFirstErpMs', 'processWallMs',
@@ -387,7 +387,7 @@ def buildRow = { Map proc, List tasks ->
     long odataMs = ((actionDurs.odataBatchStandard ?: 0L) as long) + ((actionDurs.odataBatchSplitBill ?: 0L) as long)
 
     [
-        proc.orderCode, proc.sapOrderNumber, proc.kind, proc.processCode, proc.defName, proc.state,
+        proc.orderCode, proc.sapOrderNumber, proc.kind, proc.processCode, proc.defName, proc.state, proc.spanId, proc.traceId,
         formatTs(cartSubmitAt), formatTs(orderConvertedAt), cartToOrderMs,
         proc.orderCreatedStr, proc.modSubmittedStr, proc.procCreatedStr, proc.procModifiedStr,
         msBetween(anchor, procCreated),
@@ -413,7 +413,7 @@ def buildRow = { Map proc, List tasks ->
 // Query processes in window
 // ---------------------------------------------------------------------------
 def listQ = new FlexibleSearchQuery('''
-SELECT {op.pk}, {op.code}, {op.processDefinitionName}, {op.creationtime}, {op.modifiedtime},
+SELECT {op.pk}, {op.code}, {op.processDefinitionName}, {op.creationtime}, {op.modifiedtime}, {op.spanId}, {op.traceId},
        {o.code}, {o.creationtime}, {o.modificationSubmitionTime}
 FROM {OrderProcess AS op JOIN Order AS o ON {op.order}={o.pk} JOIN BaseStore AS s ON {o.store}={s.pk}}
 WHERE {s.uid}=?store AND {op.creationtime}>=?since AND {op.creationtime}<?until AND {op.state}=?st
@@ -424,7 +424,7 @@ listQ.addQueryParameter('since', since)
 listQ.addQueryParameter('until', until)
 listQ.addQueryParameter('st', ProcessState.SUCCEEDED)
 listQ.setResultClassList([
-    PK.class, String.class, String.class, Date.class, Date.class,
+    PK.class, String.class, String.class, Date.class, Date.class, String.class, String.class,
     String.class, Date.class, Date.class
 ])
 listQ.setNeedTotal(false)
@@ -439,16 +439,20 @@ int written = 0
 processes.each { r ->
     PK pk = r[0] as PK
     String defName = r[2] ?: ''
-    String orderCode = r[5] ?: ''
+    String spanId = r[5] != null ? String.valueOf(r[5]) : ''
+    String traceId = r[6] != null ? String.valueOf(r[6]) : ''
+    String orderCode = r[7] ?: ''
     Date procCreated = r[3] as Date
     Date procModified = r[4] as Date
-    Date orderCreated = r[6] as Date
-    Date modSubmitted = r[7] as Date
+    Date orderCreated = r[8] as Date
+    Date modSubmitted = r[9] as Date
     Map proc = [
         pk               : pk,
         processCode      : r[1] ?: '',
         defName          : defName,
         state            : 'SUCCEEDED',
+        spanId           : spanId,
+        traceId          : traceId,
         procCreated      : procCreated,
         procModified     : procModified,
         orderCode        : orderCode,

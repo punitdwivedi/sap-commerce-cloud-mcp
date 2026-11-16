@@ -55,6 +55,8 @@ const HEADER = [
   "processCode",
   "processDefinition",
   "processState",
+  "spanId",
+  "traceId",
   "cartSubmitAt",
   "orderConvertedAt",
   "cartToOrderMs",
@@ -117,16 +119,16 @@ import de.hybris.platform.processengine.enums.ProcessState
 import de.hybris.platform.core.PK
 def fss = spring.getBean('flexibleSearchService')
 def startCal = Calendar.getInstance(); startCal.add(Calendar.DAY_OF_YEAR, -${DAYS}); def since = startCal.getTime()
-def q = new FlexibleSearchQuery('SELECT {op.pk}, {op.code}, {op.processDefinitionName}, {op.creationtime}, {op.modifiedtime}, {o.code}, {o.creationtime}, {o.modificationSubmitted}, {o.modificationSubmitionTime} FROM {OrderProcess AS op JOIN Order AS o ON {op.order}={o.pk} JOIN BaseStore AS s ON {o.store}={s.pk}} WHERE {s.uid}=?store AND {op.creationtime}>=?since AND {op.state}=?st ORDER BY {op.creationtime} DESC')
+def q = new FlexibleSearchQuery('SELECT {op.pk}, {op.code}, {op.processDefinitionName}, {op.creationtime}, {op.modifiedtime}, {op.spanId}, {op.traceId}, {o.code}, {o.creationtime}, {o.modificationSubmitted}, {o.modificationSubmitionTime} FROM {OrderProcess AS op JOIN Order AS o ON {op.order}={o.pk} JOIN BaseStore AS s ON {o.store}={s.pk}} WHERE {s.uid}=?store AND {op.creationtime}>=?since AND {op.state}=?st ORDER BY {op.creationtime} DESC')
 q.addQueryParameter('store','core_cbus'); q.addQueryParameter('since', since); q.addQueryParameter('st', ProcessState.SUCCEEDED)
-q.setResultClassList([PK.class, String.class, String.class, Date.class, Date.class, String.class, Date.class, Date.class, Date.class])
+q.setResultClassList([PK.class, String.class, String.class, Date.class, Date.class, String.class, String.class, String.class, Date.class, Date.class, Date.class])
 q.setStart(${offset})
 q.setCount(${count})
 q.setNeedTotal(false)
 def procs = fss.search(q).result
 def sb = new StringBuilder()
 procs.each { r ->
-  sb.append([r[0], r[1], r[2], 'SUCCEEDED', r[3], r[4], r[5], r[6], r[7], r[8]].collect { it == null ? '' : String.valueOf(it).replace('\\t',' ').replace('\\n',' ') }.join('\\t')).append('\\n')
+  sb.append([r[0], r[1], r[2], 'SUCCEEDED', r[3], r[4], r[5], r[6], r[7], r[8], r[9], r[10]].collect { it == null ? '' : String.valueOf(it).replace('\\t',' ').replace('\\n',' ') }.join('\\t')).append('\\n')
 }
 return sb.toString()
 `;
@@ -144,11 +146,13 @@ return sb.toString()
         state: p[3] || "",
         procCreated: p[4] || "",
         procModified: p[5] || "",
-        orderCode: p[6] || "",
-        orderCreated: p[7] || "",
-        modSubmitted: p[8] || p[9] || "",
-        sapOrderNumber: (p[6] || "").startsWith("S2-")
-          ? (p[6] || "").slice(3)
+        spanId: p[6] || "",
+        traceId: p[7] || "",
+        orderCode: p[8] || "",
+        orderCreated: p[9] || "",
+        modSubmitted: p[10] || p[11] || "",
+        sapOrderNumber: (p[8] || "").startsWith("S2-")
+          ? (p[8] || "").slice(3)
           : "",
         kind: (p[2] || "").includes("sap-order-process") ? "CREATE" : "MODIFY",
       };
@@ -413,6 +417,8 @@ function buildRow(proc, tasks) {
     proc.processCode,
     proc.defName,
     proc.state,
+    proc.spanId || "",
+    proc.traceId || "",
     formatTs(cartSubmitAt),
     formatTs(orderConvertedAt),
     cartToOrderMs,
