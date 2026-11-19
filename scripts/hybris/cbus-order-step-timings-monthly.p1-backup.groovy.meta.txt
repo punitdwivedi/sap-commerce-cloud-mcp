@@ -1,0 +1,10 @@
+code=cbusOrderStepTimingsMonthlyScript
+env=hybris_p1_admin
+baseUrl=https://backgroundprocessing.ce5dmbw8qb-bayeragaz1-p1-public.model-t.cc.commerce.ondemand.com/
+pk=8799500992612
+active=true
+contentLen=27867
+modified=Thu Nov 12 23:04:23 CST 2026
+duplicateScriptRows=10
+fetchedAt=2026-11-17T19:33:22.605Z
+file=/Users/pdwiv/Project/Code/AI/sap-commerce-cloud-mcp/scripts/hybris/cbus-order-step-timings-monthly.p1.groovy
